@@ -28,8 +28,8 @@ jobs:
         id: digest
         run: |
           DIGEST=$(skopeo inspect docker://docker.io/alpinelinux/unbound:latest | jq -r .Digest) # full digest
-          SHORT_DIGEST=$(echo "$DIGEST" | sed 's/^sha256://')                                    # remove 'ssha256:' prefix
-          DIGEST_TAG="sha256-${SHORT_DIGEST:0:12}"                                               # keep first 12 chars (make it human friendly)
+          SHORT_DIGEST=${DIGEST#sha256:}                                                         # remove 'sha256:' prefix
+          DIGEST_TAG="sha256-$(echo "$SHORT_DIGEST" | cut -c1-12)"                               # keep first 12 chars (make it human friendly)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           echo "digest_tag=$DIGEST_TAG" >> $GITHUB_OUTPUT
 
