@@ -98,6 +98,9 @@ jobs:
 
           mv CHANGELOG.tmp CHANGELOG.md
 
+      - name: Save upstream digest
+        run: echo "${{ steps.digest.outputs.digest }}" > .upstream-unbound.digest
+
       - name: Create/update update PR
         if: steps.compare.outputs.updated == 'true'
         uses: peter-evans/create-pull-request@v5
