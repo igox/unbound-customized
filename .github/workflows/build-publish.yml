@@ -23,12 +23,12 @@ jobs:
       - name: Read upstream digest
         id: digest
         run: |
-          FULL_DIGEST=$(cat .upstream-unbound.digest)  # e.g. sha256:abc123...
-          SHORT_DIGEST=$(echo "$FULL_DIGEST" | sed 's/^sha256://')
-          TAG="sha256-${SHORT_DIGEST:0:12}"
+          FULL_DIGEST=$(cat ./versions/.upstream-unbound.digest)  # e.g. sha256:abc123...
+          SHORT_DIGEST=${FULL_DIGEST#sha256:}                                                         # remove 'sha256:' prefix
+          TAG="sha256-$(echo "$SHORT_DIGEST" | cut -c1-12)"                               # keep first 12 chars (make it human friendly)          
 
-          echo "full=$FULL_DIGEST" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "full=$FULL_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Pull upstream image
         run: docker pull alpinelinux/unbound:latest
@@ -37,7 +37,7 @@ jobs:
         id: semver
         run: |
           VER=$(docker run --rm alpinelinux/unbound:latest unbound -V | head -n1 | awk '{print $2}')
-          echo "semver=v$VER" >> $GITHUB_OUTPUT
+          echo "semver=v$VER" >> "$GITHUB_OUTPUT"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -55,6 +55,7 @@ jobs:
       - name: Build image
         run: |
           docker build \
+            -f ./docker/Dockerfile \
             -t igox/unbound-customized:latest \
             -t igox/unbound-customized:${{ steps.digest.outputs.tag }} \
             -t igox/unbound-customized:${{ steps.semver.outputs.semver }} \

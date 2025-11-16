@@ -99,8 +99,14 @@ jobs:
 
       - name: Save new digest and semver
         run: |
-          echo "${{ steps.digest.outputs.digest }}" > .upstream-unbound.digest
-          echo "${{ steps.semver.outputs.semver }}" > .upstream-unbound.semver
+          echo "${{ steps.digest.outputs.digest }}" > ./versions/.upstream-unbound.digest
+          echo "${{ steps.semver.outputs.semver }}" > ./versions/.upstream-unbound.semver
+
+      - name: Generate Dockerfile from template
+        shell: bash
+        run: |
+          DIGEST="${{ steps.digest.outputs.digest }}"
+          sed "s|{{UpstreamDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > ./docker/Dockerfile
 
       - name: Create/update update PR
         if: steps.compare.outputs.updated == 'true'
@@ -112,6 +118,8 @@ jobs:
           branch: auto/unbound-update/${{ steps.digest.outputs.digest_tag }}
           base: main
           add-paths: |
-            .upstream-unbound.digest
-            .upstream-unbound.semver
+            ./versions/.upstream-unbound.digest
+            ./versions/.upstream-unbound.semver
+            ./docker/Dockerfile
             CHANGELOG.md
+            
