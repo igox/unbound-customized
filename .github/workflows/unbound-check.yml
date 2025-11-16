@@ -18,8 +18,8 @@ jobs:
       - name: Extract upstream Unbound version
         id: semver
         run: |
-          VER=$(docker run --entrypoint /usr/sbin/unbound alpinelinux/unbound -V | head -n1 | awk '{print $2}')
-          echo "semver=v$VER" >> $GITHUB_OUTPUT
+          VER=v$(docker run --entrypoint /usr/sbin/unbound alpinelinux/unbound -V | head -n1 | awk '{print $2}')
+          echo "semver=$VER" >> $GITHUB_OUTPUT
 
       - name: Install skopeo
         run: sudo apt-get update && sudo apt-get install -y skopeo
@@ -27,8 +27,11 @@ jobs:
       - name: Fetch upstream digest
         id: digest
         run: |
-          DIGEST=$(skopeo inspect docker://docker.io/alpinelinux/unbound:latest | jq -r .Digest)
+          DIGEST=$(skopeo inspect docker://docker.io/alpinelinux/unbound:latest | jq -r .Digest) # full digest
+          SHORT_DIGEST=$(echo "$DIGEST" | sed 's/^sha256://')                                    # remove 'ssha256:' prefix
+          DIGEST_TAG="sha256-${SHORT_DIGEST:0:12}"                                               # keep first 12 chars (make it human friendly)
           echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          echo "digest_tag=$DIGEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Read previous digest
         id: prev
@@ -51,13 +54,10 @@ jobs:
       - name: Update CHANGELOG.md
         run: |
           SEMVER=${{ steps.semver.outputs.semver }}            # e.g. v1.20.0
-          if [ -f .upstream-unbound.digest ]; then
-            DIGEST=$(cat .upstream-unbound.digest)               # upstream sha256:...
-          else
-            DIGEST=${{ steps.digest.outputs.digest }}
-          fi
-          SHORT_DIGEST=$(echo "$DIGEST" | sed 's/^sha256://')  # remove prefix
-          DIGEST_TAG="sha256-${SHORT_DIGEST:0:12}"
+          
+          DIGEST=${{ steps.digest.outputs.digest }}         # e.g. sha256:abc123...   
+          DIGEST_TAG=${{ steps.digest.outputs.digest_tag }} # e.g. sha256-abc123... shorten to first 12 chars
+          
           DATE=$(date +'%Y-%m-%d')
 
           DOCKERHUB_REPO="igox/unbound-customized"
@@ -98,18 +98,21 @@ jobs:
 
           mv CHANGELOG.tmp CHANGELOG.md
 
-      - name: Save upstream digest
-        run: echo "${{ steps.digest.outputs.digest }}" > .upstream-unbound.digest
+      - name: Save new digest and semver
+        run: |
+          echo "${{ steps.digest.outputs.digest }}" > .upstream-unbound.digest
+          echo "${{ steps.semver.outputs.semver }}" > .upstream-unbound.semver
 
       - name: Create/update update PR
         if: steps.compare.outputs.updated == 'true'
         uses: peter-evans/create-pull-request@v5
         with:
-          commit-message: "chore: update upstream unbound docker image to latest (Unbound v${{ steps.semver.outputs.semver }})"
-          title: "Update Unbound base image → ${{ steps.semver.outputs.semver }}"
-          body: "Upstream alpinelinux/unbound updated.\nThis PR updates digest SemVer, CHANGELOG, and the custom build."
-          branch: auto/unbound-update/${{ github.run_id }}
+          commit-message: "chore: update upstream unbound docker image to latest"
+          title: "Update Unbound base image → tag: latest / digest: ${{ steps.digest.outputs.short_digest }}"
+          body: "Upstream `alpinelinux/unbound` docker image updated.\n\nThis PR updates the base image to the latest version:\n-Upstream docker image digest: **${{ steps.digest.outputs.digest }}**\n-Upstream Unbound version: **${{ steps.semver.outputs.semver }}**"
+          branch: auto/unbound-update/${{ steps.digest.outputs.short_digest }}
           base: main
           add-paths: |
             .upstream-unbound.digest
+            .upstream-unbound.semver
             CHANGELOG.md
