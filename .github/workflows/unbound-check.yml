@@ -18,7 +18,7 @@ jobs:
       - name: Extract upstream Unbound version
         id: semver
         run: |
-          VER=$(docker run --rm alpinelinux/unbound:latest unbound -V | head -n1 | awk '{print $2}')
+          VER=$(docker run --entrypoint /usr/sbin/unbound alpinelinux/unbound -V | head -n1 | awk '{print $2}')
           echo "semver=v$VER" >> $GITHUB_OUTPUT
 
       - name: Install skopeo
