@@ -19,8 +19,7 @@ jobs:
         id: semver
         run: |
           VER=v$(docker run --entrypoint /usr/sbin/unbound alpinelinux/unbound -V | head -n1 | awk '{print $2}')
-          echo "semver=$VER" >> $GITHUB_OUTPUT
-
+          echo "semver=$VER" >> "$GITHUB_OUTPUT"
       - name: Install skopeo
         run: sudo apt-get update && sudo apt-get install -y skopeo
 
@@ -30,25 +29,25 @@ jobs:
           DIGEST=$(skopeo inspect docker://docker.io/alpinelinux/unbound:latest | jq -r .Digest) # full digest
           SHORT_DIGEST=${DIGEST#sha256:}                                                         # remove 'sha256:' prefix
           DIGEST_TAG="sha256-$(echo "$SHORT_DIGEST" | cut -c1-12)"                               # keep first 12 chars (make it human friendly)
-          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "digest_tag=$DIGEST_TAG" >> $GITHUB_OUTPUT
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          echo "digest_tag=$DIGEST_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Read previous digest
         id: prev
         run: |
           if [ -f .upstream-unbound.digest ]; then
-            echo "prev=$(cat .upstream-unbound.digest)" >> $GITHUB_OUTPUT
+            echo "prev=$(cat .upstream-unbound.digest)" >> "$GITHUB_OUTPUT"
           else
-            echo "prev=none" >> $GITHUB_OUTPUT
+            echo "prev=none" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Compare digests
         id: compare
         run: |
           if [ "${{ steps.digest.outputs.digest }}" != "${{ steps.prev.outputs.prev }}" ]; then
-            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "updated=true" >> "$GITHUB_OUTPUT"
           else
-            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "updated=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Update CHANGELOG.md
