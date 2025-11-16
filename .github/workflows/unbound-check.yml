@@ -51,7 +51,11 @@ jobs:
       - name: Update CHANGELOG.md
         run: |
           SEMVER=${{ steps.semver.outputs.semver }}            # e.g. v1.20.0
-          DIGEST=$(cat .upstream-unbound.digest)               # upstream sha256:...
+          if [ -f .upstream-unbound.digest ]; then
+            DIGEST=$(cat .upstream-unbound.digest)               # upstream sha256:...
+          else
+            DIGEST=${{ steps.digest.outputs.digest }}
+          fi
           SHORT_DIGEST=$(echo "$DIGEST" | sed 's/^sha256://')  # remove prefix
           DIGEST_TAG="sha256-${SHORT_DIGEST:0:12}"
           DATE=$(date +'%Y-%m-%d')
