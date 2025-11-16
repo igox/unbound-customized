@@ -1,0 +1,108 @@
+name: Check upstream unbound image update
+
+on:
+  schedule:
+    - cron: "0 * * * *" # hourly check
+  workflow_dispatch:
+
+jobs:
+  check-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull upstream image
+        run: docker pull alpinelinux/unbound:latest
+
+      - name: Extract upstream Unbound version
+        id: semver
+        run: |
+          VER=$(docker run --rm alpinelinux/unbound:latest unbound -V | head -n1 | awk '{print $2}')
+          echo "semver=v$VER" >> $GITHUB_OUTPUT
+
+      - name: Install skopeo
+        run: sudo apt-get update && sudo apt-get install -y skopeo
+
+      - name: Fetch upstream digest
+        id: digest
+        run: |
+          DIGEST=$(skopeo inspect docker://docker.io/alpinelinux/unbound:latest | jq -r .Digest)
+          echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+
+      - name: Read previous digest
+        id: prev
+        run: |
+          if [ -f .upstream-unbound.digest ]; then
+            echo "prev=$(cat .upstream-unbound.digest)" >> $GITHUB_OUTPUT
+          else
+            echo "prev=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Compare digests
+        id: compare
+        run: |
+          if [ "${{ steps.digest.outputs.digest }}" != "${{ steps.prev.outputs.prev }}" ]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update CHANGELOG.md
+        run: |
+          SEMVER=${{ steps.semver.outputs.semver }}            # e.g. v1.20.0
+          DIGEST=$(cat .upstream-unbound.digest)               # upstream sha256:...
+          SHORT_DIGEST=$(echo "$DIGEST" | sed 's/^sha256://')  # remove prefix
+          DIGEST_TAG="sha256-${SHORT_DIGEST:0:12}"
+          DATE=$(date +'%Y-%m-%d')
+
+          DOCKERHUB_REPO="igox/unbound-customized"
+          GHCR_REPO="ghcr.io/${{ github.repository_owner }}/unbound-customized"
+
+          BADGES="![Docker Hub](https://img.shields.io/docker/pulls/$DOCKERHUB_REPO)
+          ![GHCR Version](https://img.shields.io/github/v/tag/$OWNER/$GHCR_REPO?label=ghcr%20version)
+          ![Image Size](https://img.shields.io/docker/image-size/$DOCKERHUB_REPO/latest)
+          ![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-blue)"
+
+          # Prepare entry
+          ENTRY="## $SEMVER - $DATE
+
+          $BADGES
+
+          | Field               | Value |
+          |---------------------|-------|
+          | Upstream Digest     | \`$DIGEST\` |
+          | Custom Tags         | \`latest\`, \`$SEMVER\`, \`$DIGEST_TAG\` |
+          | Docker Hub Image    | \`$DOCKERHUB_REPO\` |
+          | GHCR Image          | \`$GHCR_REPO\` |
+
+          - Updated base image to **alpinelinux/unbound:latest**
+          - Upstream Unbound version: **$SEMVER**
+          - Custom image includes: \`drill\` command line tool for DNS queries"
+
+          # Create CHANGELOG if missing
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+
+          # Insert entry after title
+          awk -v entry="$ENTRY" '
+            NR==1 {print; print ""; print entry; next}
+            {print}
+          ' CHANGELOG.md > CHANGELOG.tmp
+
+          mv CHANGELOG.tmp CHANGELOG.md
+
+      - name: Create/update update PR
+        if: steps.compare.outputs.updated == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          commit-message: "chore: update upstream unbound docker image to latest (Unbound v${{ steps.semver.outputs.semver }})"
+          title: "Update Unbound base image → ${{ steps.semver.outputs.semver }}"
+          body: "Upstream alpinelinux/unbound updated.\nThis PR updates digest SemVer, CHANGELOG, and the custom build."
+          branch: auto/unbound-update/${{ github.run_id }}
+          base: main
+          add-paths: |
+            .upstream-unbound.digest
+            CHANGELOG.md
