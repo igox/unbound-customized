@@ -59,11 +59,11 @@ jobs:
           
           DATE=$(date +'%Y-%m-%d')
 
+          DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_REPO="igox/unbound-customized"
           GHCR_REPO="ghcr.io/${{ github.repository_owner }}/unbound-customized"
 
-          BADGES="![Docker Hub](https://img.shields.io/docker/pulls/$DOCKERHUB_REPO)
-          ![GHCR Version](https://img.shields.io/github/v/tag/$OWNER/$GHCR_REPO?label=ghcr%20version)
+          BADGES="![Docker Hub](https://img.shields.io/docker/pulls/$DOCKERHUB_USERNAME/$DOCKERHUB_REPO)
           ![Image Size](https://img.shields.io/docker/image-size/$DOCKERHUB_REPO/latest)
           ![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-blue)"
 
