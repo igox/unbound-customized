@@ -43,7 +43,7 @@ jobs:
           DIGEST="${{ steps.digest.outputs.full }}"
           UNBOUND_VERSION="${{ steps.semver.outputs.semver }}"
           sed "s|{{UpstreamImageDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > Dockerfile   # First replace: create Dockerfile
-          sed -i "s|{{UpstreamUnboundVersion}}|$UNBOUND_VERSION|" Dockerfile           # Second replace done in place. Next replace to be also done in place. in place.
+          sed -i "s|{{UpstreamUnboundVersion}}|$UNBOUND_VERSION|" Dockerfile           # Second replace done inplace ("-i"). Next replace to be also done in place. in place.
 
       - name: Build image
         run: |
