@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - Dockerfile
+      - ./dev/Dockerfile.tpl
       - ./versions/.upstream-unbound.digest
       - ./versions/.upstream-unbound.semver
 
