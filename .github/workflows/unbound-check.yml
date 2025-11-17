@@ -35,8 +35,8 @@ jobs:
       - name: Read previous digest
         id: prev
         run: |
-          if [ -f .upstream-unbound.digest ]; then
-            echo "prev=$(cat .upstream-unbound.digest)" >> "$GITHUB_OUTPUT"
+          if [ -f ./versions/.upstream-unbound.digest ]; then
+            echo "prev=$(cat ./versions/.upstream-unbound.digest)" >> "$GITHUB_OUTPUT"
           else
             echo "prev=none" >> "$GITHUB_OUTPUT"
           fi
