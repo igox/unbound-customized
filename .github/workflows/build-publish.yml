@@ -6,7 +6,8 @@ on:
       - main
     paths:
       - Dockerfile
-      - .upstream-unbound.digest
+      - ./versions/.upstream-unbound.digest
+      - ./versions/.upstream-unbound.semver
 
 jobs:
   build:
@@ -23,49 +24,46 @@ jobs:
       - name: Read upstream digest
         id: digest
         run: |
-          FULL_DIGEST=$(cat .upstream-unbound.digest)  # e.g. sha256:abc123...
-          SHORT_DIGEST=$(echo "$FULL_DIGEST" | sed 's/^sha256://')
-          TAG="sha256-${SHORT_DIGEST:0:12}"
+          FULL_DIGEST=$(cat ./versions/.upstream-unbound.digest)  # e.g. sha256:abc123...
+          SHORT_DIGEST=${FULL_DIGEST#sha256:}                                                         # remove 'sha256:' prefix
+          TAG="sha256-$(echo "$SHORT_DIGEST" | cut -c1-12)"                               # keep first 12 chars (make it human friendly)          
 
-          echo "full=$FULL_DIGEST" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "full=$FULL_DIGEST" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Pull upstream image
-        run: docker pull alpinelinux/unbound:latest
-
-      - name: Extract upstream Unbound version (SemVer)
+      - name: Read upstream SemVer
         id: semver
         run: |
-          VER=$(docker run --rm alpinelinux/unbound:latest unbound -V | head -n1 | awk '{print $2}')
-          echo "semver=v$VER" >> $GITHUB_OUTPUT
+          SEMVER=$(cat ./versions/.upstream-unbound.semver)  # e.g. v1.20.0
+          echo "semver=$SEMVER" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Dockerfile from template
+        shell: bash
+        run: |
+          DIGEST="${{ steps.digest.outputs.full }}"
+          sed "s|{{UpstreamDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > ./docker/Dockerfile
+
+      - name: Build image
+        run: |
+          docker build \
+            -f ./docker/Dockerfile \
+            -t igox/unbound-customized:latest \
+            -t igox/unbound-customized:${{ steps.digest.outputs.tag }} \
+            -t igox/unbound-customized:${{ steps.semver.outputs.semver }} \
+            .
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build image
-        run: |
-          docker build \
-            -t igox/unbound-customized:latest \
-            -t igox/unbound-customized:${{ steps.digest.outputs.tag }} \
-            -t igox/unbound-customized:${{ steps.semver.outputs.semver }} \
-            .
+          password: ${{ secrets.DOCKERHUB_TOKEN }}            
 
       - name: Push image to Docker Hub
         run: |
           docker push igox/unbound-customized:latest
           docker push igox/unbound-customized:${{ steps.digest.outputs.tag }}
           docker push igox/unbound-customized:${{ steps.semver.outputs.semver }}
-
+          
       - name: Tag for GHCR
         run: |
           docker tag igox/unbound-customized:latest \
@@ -76,6 +74,13 @@ jobs:
 
           docker tag igox/unbound-customized:${{ steps.semver.outputs.semver }} \
             ghcr.io/${{ github.repository_owner }}/unbound-customized:${{ steps.semver.outputs.semver }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}            
 
       - name: Push image to GHCR
         run: |

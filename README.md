@@ -1,7 +1,7 @@
 # unbound-customized
 
 This is a very minor change to [`alpinelinux/unbound`](https://hub.docker.com/r/alpinelinux/unbound) docker image to include the `drill` DNS tool.
-You can see the changes made to the upstream image in the [Dockerfile](./Dockerfile)
+You can see the changes made to the upstream image in the [Dockerfile](./docker/Dockerfile)
 
 Aim is to be able to put in place a docker compose health check when using this container.
 
