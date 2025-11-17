@@ -6,6 +6,10 @@ LABEL url="https://github.com/igox/unbound-customized"
 LABEL upstream.alpinelinux.unbound.image.digest.="{{UpstreamImageDigest}}"
 LABEL upstream.alpinelinux.unbound.unbound.version="{{UpstreamUnboundVersion}}"
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD drill @127.0.0.1 cloudflare.com || exit 1
+COPY ./docker/healthcheck.sh /usr/local/bin/healthcheck.sh
+RUN chmod +x /usr/local/bin/healthcheck.sh
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD /usr/local/bin/healthcheck.sh
 
 RUN apk add --no-cache drill
