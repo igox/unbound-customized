@@ -108,7 +108,7 @@ jobs:
         with:
           commit-message: "chore: update upstream unbound docker image to latest"
           title: "Update Unbound base image → tag: latest / digest: ${{ steps.digest.outputs.digest_tag }}"
-          body: "Upstream `alpinelinux/unbound` docker image updated.\n\nThis PR updates the base image to the latest version:\n- Upstream docker image digest: **${{ steps.digest.outputs.digest }}**\n-Upstream Unbound version: **${{ steps.semver.outputs.semver }}**"
+          body: "# Upstream `alpinelinux/unbound` docker image updated.\n\nThis PR updates the base image to the latest version:\n- Upstream docker image digest: **${{ steps.digest.outputs.digest }}**\n-Upstream Unbound version: **${{ steps.semver.outputs.semver }}**"
           branch: auto/unbound-update/${{ steps.digest.outputs.digest_tag }}
           base: main
           add-paths: |
