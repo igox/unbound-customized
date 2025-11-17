@@ -114,6 +114,5 @@ jobs:
           add-paths: |
             ./versions/.upstream-unbound.digest
             ./versions/.upstream-unbound.semver
-            ./docker/Dockerfile
             CHANGELOG.md
             
