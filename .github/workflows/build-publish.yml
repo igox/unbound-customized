@@ -5,9 +5,9 @@ on:
     branches:
       - main
     paths:
-      - ./dev/Dockerfile.tpl
-      - ./versions/.upstream-unbound.digest
-      - ./versions/.upstream-unbound.semver
+      - dev/Dockerfile.tpl
+      - versions/.upstream-unbound.digest
+      - versions/.upstream-unbound.semver
 
 jobs:
   build:
