@@ -102,12 +102,6 @@ jobs:
           echo "${{ steps.digest.outputs.digest }}" > ./versions/.upstream-unbound.digest
           echo "${{ steps.semver.outputs.semver }}" > ./versions/.upstream-unbound.semver
 
-      - name: Generate Dockerfile from template
-        shell: bash
-        run: |
-          DIGEST="${{ steps.digest.outputs.digest }}"
-          sed "s|{{UpstreamDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > ./docker/Dockerfile
-
       - name: Create/update update PR
         if: steps.compare.outputs.updated == 'true'
         uses: peter-evans/create-pull-request@v5
