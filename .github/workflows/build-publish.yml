@@ -42,13 +42,12 @@ jobs:
         run: |
           DIGEST="${{ steps.digest.outputs.full }}"
           UNBOUND_VERSION="${{ steps.semver.outputs.semver }}"
-          sed "s|{{UpstreamImageDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > ./docker/Dockerfile   # First replace: create Dockerfile
-          sed -i "s|{{UpstreamUnboundVersion}}|$UNBOUND_VERSION|" ./docker/Dockerfile           # Second replace done in place. Next replace to be also done in place. in place.
+          sed "s|{{UpstreamImageDigest}}|$DIGEST|" ./dev/Dockerfile.tpl > Dockerfile   # First replace: create Dockerfile
+          sed -i "s|{{UpstreamUnboundVersion}}|$UNBOUND_VERSION|" Dockerfile           # Second replace done inplace ("-i"). Next replace to be also done in place. in place.
 
       - name: Build image
         run: |
           docker build \
-            -f ./docker/Dockerfile \
             -t igox/unbound-customized:latest \
             -t igox/unbound-customized:${{ steps.digest.outputs.tag }} \
             -t igox/unbound-customized:${{ steps.semver.outputs.semver }} \
@@ -89,3 +88,4 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/unbound-customized:latest
           docker push ghcr.io/${{ github.repository_owner }}/unbound-customized:${{ steps.digest.outputs.tag }}
           docker push ghcr.io/${{ github.repository_owner }}/unbound-customized:${{ steps.semver.outputs.semver }}
+
