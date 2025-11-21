@@ -2,7 +2,7 @@
 
 This is a very minor change to [`alpinelinux/unbound`](https://hub.docker.com/r/alpinelinux/unbound) docker image to include the `drill` DNS tool.
 
-Aim is to add a native health check when to the container.
+Aim is to add a native health check when using this modified container.
 
 Implemented `health_check` is the following equivalent of `docker compose`:
 
@@ -22,7 +22,7 @@ Implemented `health_check` is the following equivalent of `docker compose`:
 
     [...]
 ```
-™
+
 You can see the changes made to the upstream image in the [Dockerfile](./dev/Dockerfile.tpl) file.
 
 # Change Log
