@@ -3,8 +3,8 @@ FROM alpinelinux/unbound@{{UpstreamImageDigest}}
 LABEL maintainer="iGoX <code@igox.org>"
 LABEL description="Lightweight Unbound DNS server with native healcheck support"
 LABEL url="https://github.com/igox/unbound-customized"
-LABEL upstream.alpinelinux.unbound.image.digest.="{{UpstreamImageDigest}}"
-LABEL upstream.alpinelinux.unbound.unbound.version="{{UpstreamUnboundVersion}}"
+LABEL alpinelinux.unbound.upstream.image.digest="{{UpstreamImageDigest}}"
+LABEL alpinelinux.unbound.upstream.unbound.version="{{UpstreamUnboundVersion}}"
 
 COPY ./docker/healthcheck.sh /usr/local/bin/healthcheck.sh
 RUN chmod +x /usr/local/bin/healthcheck.sh
