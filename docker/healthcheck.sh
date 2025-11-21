@@ -28,8 +28,5 @@ for DOMAIN in $DOMAINS; do
     done
 
     # All retries failed
-    # Kill unbound to trigger container restart
-    echo "Healthcheck failed — killing unbound to trigger container restart."
-    pkill unbound || kill 1
     exit 1
 done
