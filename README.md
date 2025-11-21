@@ -24,6 +24,7 @@ Implemented `health_check` is the following equivalent of `docker compose`:
 ```
 
 You can see the changes made to the upstream image in the [Dockerfile](./dev/Dockerfile.tpl) file.
+
 The healthcheck logic into the [healthcheck.sh](./docker/healthcheck.sh) file.
 
 # Change Log
