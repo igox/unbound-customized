@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.25.1 - 2026-06-28
+
+![Docker Hub](https://img.shields.io/docker/pulls/igox/igox/unbound-customized)
+![Image Size](https://img.shields.io/docker/image-size/igox/unbound-customized/latest)
+![Architecture](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-blue)
+
+| Field               | Value |
+|---------------------|-------|
+| Upstream Digest     | `sha256:be4f836be211a721fd5d5d3cd6938a1ec4e836fed3644a45e909b88bdfde9333` |
+| Custom Tags         | `latest`, `v1.25.1`, `sha256-be4f836be211` |
+| Docker Hub Image    | `igox/unbound-customized` |
+| GHCR Image          | `ghcr.io/igox/unbound-customized` |
+
+- Updated base image to **alpinelinux/unbound:latest**
+- Upstream Unbound version: **v1.25.1**
+- Custom image includes: `drill` command line tool for DNS queries
+
 ## v1.25.1 - 2026-06-21
 
 ![Docker Hub](https://img.shields.io/docker/pulls/igox/igox/unbound-customized)
